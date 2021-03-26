@@ -9,13 +9,13 @@ import lombok.Setter;
 
 /**
  * @author GS
- * @date 2018年01月10日
+ * @date 2018年01月10日BaseEnum
  */
 @AllArgsConstructor
 @Getter
 public enum BooleanEnum implements BaseEnum {
-    IS_FALSE(false, "否"),
-    IS_TRUE(true, "是");
+    IS_FALSE(false, "N"),
+    IS_TRUE(true, "Y");
 
     @Setter
     private boolean is;
