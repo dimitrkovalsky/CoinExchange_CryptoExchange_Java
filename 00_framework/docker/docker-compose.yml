@@ -1,101 +1,83 @@
 version: "3.9"
 services:
-  web:
-    build: .
+  zookeeper:
+    image: wurstmeister/zookeeper
     ports:
-      - "5000:5000"
+      - "2181:2181"
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_CREATE_TOPICS: "UploadFile:1:1,GetFile:1:1,TrackUpload:1:1,GetEmailContent:1:1" # topic:partition:replicas
+      KAFKA_ADVERTISED_HOST_NAME: kafka # docker-machine ip
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_PORT: 9092
+#    volumes:
+#      - /var/run/docker.sock:/var/run/docker.sock
   redis:
     image: "redis:alpine"
-
-  zookeeper:
-    image: debezium/zookeeper:0.8
+    command: redis-server --requirepass devRedis
     ports:
-      - 2181:2181
-      - 2888:2888
-      - 3888:3888
-    kafka:
-      image: debezium/kafka:0.8
-      ports:
-        - 9092:9092
-        links:
-          - zookeeper
-        environment:
-          - ZOOKEEPER_CONNECT=zookeeper:2181
-      mysql:
-        image: debezium/example-mysql:0.8
-        ports:
-          - 3306:3306
-        environment:
-          - MYSQL_ROOT_PASSWORD=debezium
-          - MYSQL_USER=mysqluser
-          - MYSQL_PASSWORD=mysqlpw
-      connect:
-        image: debezium/connect:0.8
-        ports:
-          - 8083:8083
-        volumes:
-          - <REPLACE_THIS_WITH_ABSOLUTE_PATH_TO_MONGODB_CONNECTOR>:/kafka/connect/kafka-connect-mongodb/
-        links:
-          - kafka
-          - mysql
-        environment:
-          - BOOTSTRAP_SERVERS=kafka:9092
-          - GROUP_ID=1
-          - CONFIG_STORAGE_TOPIC=my_connect_configs
-          - OFFSET_STORAGE_TOPIC=my_connect_offsets
-mysql:
-  container_name: mysql
-  build: /home/vagrant/infra/container/mysql
-  ports:
-    - "3306:3306"
-  environment:
-    - MYSQL_USER=username
-    - MYSQL_PASSWORD=password
-    - MYSQL_ROOT_PASSWORD=password
-  volumes:
-    - /home/vagrant/data/maxwell-test/mysql:/var/lib/mysql
-    - /home/vagrant/maxwell-test/mysql-config.cnf:/etc/mysql/conf.d/mysql-config.cnf
-    - ./install.sql:/docker-entrypoint-initdb.d/install.sql
-  restart: always
+      - "6379:6379"
+#    volumes:
+#      - $PWD/redis-data:/var/lib/redis
+#      - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
+    environment:
+      - REDIS_REPLICATION_MODE=master
 
-kafka:
-  container_name: kafka
-  build: /home/vagrant/infra/container/kafka
-  ports:
-    - 2181:2181
-    - 9092:9092
-  environment:
-    - ADVERTISED_HOST=192.168.50.4
-  restart: always
+#    networks:
+#      node_net:
+#        ipv4_address: 172.28.1.4
 
-kafka-manager:
-  container_name: kafka-manager
-  build: /home/vagrant/infra/container/kafka-manager
-  links:
-    - kafka
-  ports:
-    - 9000:9000
-  environment:
-    - ZK_HOSTS=kafka:2181
-    # - APPLICATION_SECRET=password
-  restart: always
+  mysql:
+    image: mysql:5.7
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'bizzan'
+      MYSQL_USER: 'dev'
+      MYSQL_PASSWORD: 'devPassword123'
+      MYSQL_ROOT_PASSWORD: 'devPassword123'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+#    volumes:
+#      - my-db:/var/lib/mysql
+  # Names our volume
+#  volumes:
+#    my-db:
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - MONGODB_USER=bizzan
+      - MONGODB_DATABASE=bitrade
+      - MONGODB_PASS=devPassword123
+#    volumes:
+#      - /home/barry/mongodb/database:/data/db
+    ports:
+      - 27017:28017
+    restart: unless-stopped
 
-maxwell:
-  container_name: maxwell
-  build: /home/vagrant/infra/container/maxwell
-  links:
-    - mysql
-    - kafka
-  environment:
-    - MYSQL_USER=username
-    - MYSQL_PASSWORD=password
-    - REPLICATION_USER=maxwell
-    - REPLICATION_PASSWORD=password
-  restart: always
-
-redis:
-  container_name: redis
-  build: /home/vagrant/infra/container/redis
-  ports:
-    - "6379:6379"
-  restart: always
+  elastic:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+    container_name: elastic
+    environment:
+      - node.name=elastic
+      - cluster.name=es-docker-cluster
+      - cluster.initial_master_nodes=es01,es02,es03
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+#    volumes:
+#      - data01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+#    networks:
+#      - elastic

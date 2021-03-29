@@ -27,8 +27,8 @@ public class EurekaStateListener {
 	
 	private final static Logger logger = LoggerFactory.getLogger(EurekaStateListener.class);
 	 
-    @Autowired
-    private JavaMailSender javaMailSender;
+//    @Autowired
+//    private JavaMailSender javaMailSender;
 
     @Value("${spring.mail.username}")
     private String from;
@@ -84,22 +84,23 @@ public class EurekaStateListener {
     @Async
     public void sendEmailMsg(String email, String msg, String subject) {
     	try {
-	        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-	        MimeMessageHelper helper = null;
-	        helper = new MimeMessageHelper(mimeMessage, true);
-	        helper.setFrom(from);
-	        helper.setTo(email);
-	        helper.setSubject(company + "-" + subject);
-	        Map<String, Object> model = new HashMap<>(16);
-	        model.put("msg", msg);
-	        Configuration cfg = new Configuration(Configuration.VERSION_2_3_26);
-	        cfg.setClassForTemplateLoading(this.getClass(), "/templates");
-	        Template template = cfg.getTemplate("simpleMessage.ftl");
-	        String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
-	        helper.setText(html, true);
+    	    logger.info("Message:{} was send to {}", msg, email);
+//	        MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+//	        MimeMessageHelper helper = null;
+//	        helper = new MimeMessageHelper(mimeMessage, true);
+//	        helper.setFrom(from);
+//	        helper.setTo(email);
+//	        helper.setSubject(company + "-" + subject);
+//	        Map<String, Object> model = new HashMap<>(16);
+//	        model.put("msg", msg);
+//	        Configuration cfg = new Configuration(Configuration.VERSION_2_3_26);
+//	        cfg.setClassForTemplateLoading(this.getClass(), "/templates");
+//	        Template template = cfg.getTemplate("simpleMessage.ftl");
+//	        String html = FreeMarkerTemplateUtils.processTemplateIntoString(template, model);
+//	        helper.setText(html, true);
 
 	        //发送邮件
-	        javaMailSender.send(mimeMessage);
+	      //  javaMailSender.send(mimeMessage);
     	}catch(Exception e) {
     		e.printStackTrace();
     	}

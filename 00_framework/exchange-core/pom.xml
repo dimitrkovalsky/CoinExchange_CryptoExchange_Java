@@ -9,7 +9,6 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.bizzan.bitrade</groupId>
     <artifactId>exchange-core</artifactId>
 
     <dependencies>
@@ -35,6 +34,10 @@
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
         <!---QueryDSL开始-->
         <dependency>
             <groupId>com.querydsl</groupId>
